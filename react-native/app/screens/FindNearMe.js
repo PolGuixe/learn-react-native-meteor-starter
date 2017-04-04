@@ -24,18 +24,28 @@ class FindNearMe extends Component {
     navigator: PropTypes.object,
   }
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      loading: false,
+    };
+  }
+
   handleGeolocationSuccess = (position) => {
     const params = {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
     };
 
+    this.setState({ loading: true });
     Meteor.call('Locations.getNearestLocations', params, (error, locations) => {
       if (error) {
         this.props.navigator.showLocalAlert(error.reason, config.errorStyles);
       } else {
         console.log('locations: ', locations);
       }
+      this.setState({ loading: false });
     });
   };
 
@@ -56,6 +66,7 @@ class FindNearMe extends Component {
       <Container>
         <LocateMeButton
           onPress={() => this.goToNearMe()}
+          loading={this.state.loading}
         />
         <Header>
           Find Near Me
