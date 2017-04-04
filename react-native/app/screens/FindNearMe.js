@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import Meteor from 'react-native-meteor';
 import Container from '../components/Container';
 import { Header } from '../components/Text';
 import LocateMeButton from '../components/LocateMeButton';
@@ -24,8 +25,18 @@ class FindNearMe extends Component {
   }
 
   handleGeolocationSuccess = (position) => {
-    console.log('latitude', position.coords.latitude);
-    console.log('longitude', position.coords.longitude);
+    const params = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+    };
+
+    Meteor.call('Locations.getNearestLocations', params, (error, locations) => {
+      if (error) {
+        this.props.navigator.showLocalAlert(error.reason, config.errorStyles);
+      } else {
+        console.log('locations: ', locations);
+      }
+    });
   };
 
   handleGeolocationError = (error) => {
