@@ -4,6 +4,7 @@ import Container from '../components/Container';
 import { Header } from '../components/Text';
 import LocateMeButton from '../components/LocateMeButton';
 import config from '../config/config';
+import Router from '../config/router';
 
 
 const geoSettings = {
@@ -43,7 +44,8 @@ class FindNearMe extends Component {
       if (error) {
         this.props.navigator.showLocalAlert(error.reason, config.errorStyles);
       } else {
-        console.log('locations: ', locations);
+        console.log(locations);
+        this.props.navigator.push(Router.getRoute('nearMe', { locations })); // New addition
       }
       this.setState({ loading: false });
     });
