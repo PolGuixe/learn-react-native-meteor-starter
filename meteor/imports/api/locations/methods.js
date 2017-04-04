@@ -1,13 +1,14 @@
-import { Meteor } from 'meteor/meteor';
-import { check } from 'meteor/check';
+import { ValidatedMethod } from 'meteor/mdg:validated-method';
+import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import { Locations } from './locations';
 
-Meteor.methods({
-  'Locations.getNearestLocations': function getNearestLocations(params) {
-    console.log(params);
-    // check(position.longitude, String);
-    // check(position.latitude, String);
-
+export const getNearestLocations = new ValidatedMethod({
+  name: 'Locations.getNearestLocations',
+  validate: new SimpleSchema({
+    latitude: { type: Number, decimal: true },
+    longitude: { type: Number, decimal: true },
+  }).validator(),
+  run({ latitude, longitude }) {
     const selector = {};
     const options = {
       limit: 10,
