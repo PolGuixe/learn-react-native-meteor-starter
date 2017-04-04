@@ -67,7 +67,7 @@ class FindNearMe extends Component {
     return (
       <Container>
         <LocateMeButton
-          onPress={() => this.goToNearMe()}
+          onPress={this.goToNearMe}
           loading={this.state.loading}
         />
         <Header>
