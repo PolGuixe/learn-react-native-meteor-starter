@@ -9,7 +9,17 @@ export const getNearestLocations = new ValidatedMethod({
     longitude: { type: Number, decimal: true },
   }).validator(),
   run({ latitude, longitude }) {
-    const selector = {};
+    const selector = {
+      location: {
+          $near: {
+            $geometry: {
+              type: "Point" ,
+              coordinates: [ longitude , latitude ]
+            },
+         $minDistance: 0
+        }
+      }
+    };
     const options = {
       limit: 10,
     };
