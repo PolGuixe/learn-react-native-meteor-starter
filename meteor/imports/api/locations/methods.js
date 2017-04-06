@@ -1,3 +1,4 @@
+import { Meteor } from 'meteor/meteor';
 import { ValidatedMethod } from 'meteor/mdg:validated-method';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import { Locations } from './locations';
@@ -25,5 +26,40 @@ export const getNearestLocations = new ValidatedMethod({
     };
 
     return Locations.find(selector, options).fetch();
+  },
+});
+
+export const changeCheckinStatus = new ValidatedMethod({
+  name: 'Locations.changeCheckin',
+  validate: new SimpleSchema({
+    locationId: { type: String },
+    status: { type: String, allowedValues: ['in', 'out'] },
+  }).validator(),
+  run({ locationId, status }) {
+    const location = Locations.findOne({ _id: locationId });
+
+    if (location) {
+      switch (status) {
+        case 'in':
+          Locations.update(
+            { _id: locationId },
+            { $set:
+              { checkedInUserId: 'demo' },
+            },
+          );
+          break;
+        default:
+          Locations.update(
+            { _id: locationId },
+            { $set:
+              { checkedInUserId: null },
+            },
+          );
+          break;
+      }
+    } else {
+      throw new Meteor.Error('Locations.changeCheckin.invalidLocationId',
+        'Must pass a valid location id to change checkin status.');
+    }
   },
 });
