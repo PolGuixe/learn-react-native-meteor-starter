@@ -2,6 +2,7 @@ import { Meteor } from 'meteor/meteor';
 import { ValidatedMethod } from 'meteor/mdg:validated-method';
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import { Locations } from './locations';
+import { Activity } from '../activity/activity';
 
 export const getNearestLocations = new ValidatedMethod({
   name: 'Locations.getNearestLocations',
@@ -12,14 +13,14 @@ export const getNearestLocations = new ValidatedMethod({
   run({ latitude, longitude }) {
     const selector = {
       location: {
-          $near: {
-            $geometry: {
-              type: "Point" ,
-              coordinates: [ longitude , latitude ]
-            },
-         $minDistance: 0
-        }
-      }
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [longitude, latitude],
+          },
+          $minDistance: 0,
+        },
+      },
     };
     const options = {
       limit: 10,
@@ -43,23 +44,33 @@ export const changeCheckinStatus = new ValidatedMethod({
         case 'in':
           Locations.update(
             { _id: locationId },
-            { $set:
-              { checkedInUserId: 'demo' },
+            {
+              $set: { checkedInUserId: 'demo' },
             },
           );
           break;
         default:
           Locations.update(
             { _id: locationId },
-            { $set:
-              { checkedInUserId: null },
+            {
+              $set: { checkedInUserId: null },
             },
           );
           break;
       }
+      
+      Activity.insert({
+        createdAt: new Date(),
+        username: 'demo',
+        userId: 'demo',
+        type: status,
+        locationId,
+      });
     } else {
-      throw new Meteor.Error('Locations.changeCheckin.invalidLocationId',
-        'Must pass a valid location id to change checkin status.');
+      throw new Meteor.Error(
+        'Locations.changeCheckin.invalidLocationId',
+        'Must pass a valid location id to change checkin status.',
+      );
     }
   },
 });
