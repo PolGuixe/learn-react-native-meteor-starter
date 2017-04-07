@@ -37,15 +37,54 @@ export const changeCheckinStatus = new ValidatedMethod({
     status: { type: String, allowedValues: ['in', 'out'] },
   }).validator(),
   run({ locationId, status }) {
+    // Throw error iF user not logged in
+    if (!this.userId) {
+      throw new Meteor.Error('Locations.changeCheckin.userNotLogged', 'You must be logged in');
+    }
+
     const location = Locations.findOne({ _id: locationId });
 
     if (location) {
       switch (status) {
         case 'in':
+          if (location.checkedInUserId === this.userId) {
+            throw new Meteor.Error(
+              'Locations.changeCheckin.currentUserAlreadyIn',
+              'You are alredy checked in',
+            );
+          }
+          if (location.checkedInUserId !== null) {
+            throw new Meteor.Error(
+              'Locations.changeCheckin.otherUserAlreadyIn',
+              'Another user is alredy checked in',
+            );
+          }
+          if (Locations.findOne({ checkedInUserId: this.userId })) {
+            throw new Meteor.Error(
+              'Locations.changeCheckin.currentUserCheckedInDifferentLocation',
+              'The current user is already checked into a different location',
+            );
+          }
+
           Locations.update(
             { _id: locationId },
             {
-              $set: { checkedInUserId: 'demo' },
+              $set: { checkedInUserId: this.userId },
+            },
+          );
+          break;
+        case 'out':
+          if (location.checkedInUserId !== this.userId) {
+            throw new Meteor.Error(
+              'Locations.changeCheckin.currentUserNotCheckedIn',
+              'You are not checked in',
+            );
+          }
+
+          Locations.update(
+            { _id: locationId },
+            {
+              $set: { checkedInUserId: null },
             },
           );
           break;
@@ -58,11 +97,11 @@ export const changeCheckinStatus = new ValidatedMethod({
           );
           break;
       }
-      
+
       Activity.insert({
         createdAt: new Date(),
-        username: 'demo',
-        userId: 'demo',
+        username: Meteor.user().username,
+        userId: this.userId,
         type: status,
         locationId,
       });
