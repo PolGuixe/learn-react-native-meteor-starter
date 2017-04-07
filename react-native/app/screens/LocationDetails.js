@@ -17,9 +17,11 @@ class LocationDetails extends Component {
   static propTypes = {
     location: PropTypes.object,
     navigator: PropTypes.object,
+    navigation: PropTypes.object,
     activityReady: PropTypes.bool,
     activity: PropTypes.array,
-  }
+    user: PropTypes.user,
+  };
 
   constructor(props) {
     super(props);
@@ -34,43 +36,42 @@ class LocationDetails extends Component {
     if (location.checkedInUserId) {
       status = CHECKED_OUT;
     }
-    this.setState({ changingStatus: true });
-    Meteor.call('Locations.changeCheckin', { locationId: location._id, status }, (error) => {
-      if (error) {
-        this.props.navigator.showLocalAlert(error.reason, config.errorStyles);
-      }
-      this.setState({ changingStatus: false });
-    });
-  }
+
+    if (this.props.user !== null) {
+      this.setState({ changingStatus: true });
+      Meteor.call('Locations.changeCheckin', { locationId: location._id, status }, error => {
+        if (error) {
+          this.props.navigator.showLocalAlert(error.reason, config.errorStyles);
+        }
+        this.setState({ changingStatus: false });
+      });
+    } else {
+      this.props.navigation.performAction(({ tabs, stacks }) => {
+        tabs('main').jumpToTab('account');
+      });
+    }
+  };
 
   renderItems = () => {
     const { activityReady, activity } = this.props;
     if (!activityReady) {
       return <Header>Loading...</Header>;
     } else if (activity.length === 0) {
-      return (
-        <NotFound
-          text="No Activity Yet"
-          small
-        />
-      );
-    } else {
-      return (
-        _.map(activity, activityItem => (
-          <ListItem
-            key={activityItem._id}
-            title={activityItem.username}
-            subtitle={moment(activityItem.createdAt).format('MMM Do @ hh:mma')}
-            rightTitle={activityItem.type === CHECKED_IN ? 'Checked In' : 'Checked Out'}
-          />
-        ))
-      );
+      return <NotFound text="No Activity Yet" small />;
     }
-  }
+    return _.map(activity, activityItem => (
+      <ListItem
+        key={activityItem._id}
+        title={activityItem.username}
+        subtitle={moment(activityItem.createdAt).format('MMM Do @ hh:mma')}
+        rightTitle={activityItem.type === CHECKED_IN ? 'Checked In' : 'Checked Out'}
+      />
+    ));
+  };
 
   render() {
     const location = this.props.location || _.get(this.props, 'route.params.location', {});
-    const userId = _.get(this.props, 'user._id', 'demo');
+    const userId = _.get(this.props, 'user._id', null);
 
     const checkedIn = location.checkedInUserId === userId;
     const available = typeof location.checkedInUserId !== 'string';
@@ -90,9 +91,7 @@ class LocationDetails extends Component {
 
     return (
       <Container scroll>
-        <Card
-          title={location.station_name}
-        >
+        <Card title={location.station_name}>
           <Text>{location.street_address}</Text>
           <Text>{location.access_days_time}</Text>
         </Card>
@@ -106,9 +105,7 @@ class LocationDetails extends Component {
           onPress={this.attemptCheckin}
           loading={this.state.changingStatus}
         />
-        <Card
-          title="Activity"
-        >
+        <Card title="Activity">
           <List
             containerStyle={{
               borderTopWidth: 0,
@@ -124,19 +121,25 @@ class LocationDetails extends Component {
   }
 }
 
-const ConnectedLocationDetails = createContainer((params) => {
-  const location = _.get(params, 'route.params.location', {});
+const ConnectedLocationDetails = createContainer(
+  params => {
+    const location = _.get(params, 'route.params.location', {});
 
-  Meteor.subscribe('Locations.pub.details', { locationId: location._id });
-  const activityHandle = Meteor.subscribe('Activity.pub.list', { locationId: location._id });
+    Meteor.subscribe('Locations.pub.details', { locationId: location._id });
+    const activityHandle = Meteor.subscribe('Activity.pub.list', { locationId: location._id });
 
-  return {
-    user: Meteor.user(),
-    location: Meteor.collection('locations').findOne({ _id: location._id }),
-    activityReady: activityHandle.ready(),
-    activity: Meteor.collection('activity').find({ locationId: location._id }, { sort: { createdAt: -1 } }),
-  };
-}, LocationDetails);
+    return {
+      user: Meteor.user(),
+      location: Meteor.collection('locations').findOne({ _id: location._id }),
+      activityReady: activityHandle.ready(),
+      activity: Meteor.collection('activity').find(
+        { locationId: location._id },
+        { sort: { createdAt: -1 } },
+      ),
+    };
+  },
+  LocationDetails,
+);
 
 ConnectedLocationDetails.route = {
   navigationBar: {
