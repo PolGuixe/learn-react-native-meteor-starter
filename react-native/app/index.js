@@ -1,4 +1,4 @@
-import Meteor from 'react-native-meteor';
+import Meteor, { createContainer } from 'react-native-meteor';
 import React, { PropTypes } from 'react';
 import { View, Text } from 'react-native';
 import {
@@ -18,14 +18,8 @@ const renderIcon = (isSelected, name, title) => {
   const color = isSelected ? colors.primary : colors.iconSubtle;
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Icon
-        name={name}
-        color={color}
-        size={28}
-      />
-      <Text
-        style={{ color }}
-      >
+      <Icon name={name} color={color} size={28} />
+      <Text style={{ color }}>
         {title}
       </Text>
     </View>
@@ -36,15 +30,8 @@ const App = ({ user }) => {
   const accountRoute = user ? Router.getRoute('profile') : Router.getRoute('signUp');
   return (
     <NavigationProvider router={Router}>
-      <TabNavigation
-        id="main"
-        navigatorUID="main"
-        initialTab="home"
-      >
-        <TabItem
-          id="home"
-          renderIcon={(isSelected) => renderIcon(isSelected, 'home', 'Home')}
-        >
+      <TabNavigation id="main" navigatorUID="main" initialTab="home">
+        <TabItem id="home" renderIcon={isSelected => renderIcon(isSelected, 'home', 'Home')}>
           <StackNavigation
             id="home"
             navigatorUID="home"
@@ -53,13 +40,9 @@ const App = ({ user }) => {
         </TabItem>
         <TabItem
           id="account"
-          renderIcon={(isSelected) => renderIcon(isSelected, 'account-circle', 'Account')}
+          renderIcon={isSelected => renderIcon(isSelected, 'account-circle', 'Account')}
         >
-          <StackNavigation
-            id="account"
-            navigatorUID="account"
-            initialRoute={accountRoute}
-          />
+          <StackNavigation id="account" navigatorUID="account" initialRoute={accountRoute} />
         </TabItem>
       </TabNavigation>
     </NavigationProvider>
@@ -70,4 +53,13 @@ App.propTypes = {
   user: PropTypes.object,
 };
 
-export default App;
+const ConnectedApp = createContainer(
+  () => {
+    const user = Meteor.user();
+
+    return { user };
+  },
+  App,
+);
+
+export default ConnectedApp;
