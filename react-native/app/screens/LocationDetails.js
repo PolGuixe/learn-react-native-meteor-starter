@@ -20,7 +20,7 @@ class LocationDetails extends Component {
     navigation: PropTypes.object,
     activityReady: PropTypes.bool,
     activity: PropTypes.array,
-    user: PropTypes.user,
+    user: PropTypes.object,
   };
 
   constructor(props) {
