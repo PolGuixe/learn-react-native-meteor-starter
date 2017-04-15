@@ -65,7 +65,7 @@ class SignUp extends Component {
       return this.props.navigator.showLocalAlert('Passwords do not match', config.errorStyles);
     }
     this.setState({ signingUP: true });
-    Accounts.createUser({ username, email, password }, error => {
+    return Accounts.createUser({ username, email, password }, error => {
       this.setState({ signingUP: false });
       if (error) {
         this.props.navigator.showLocalAlert(error.reason, config.errorStyles);
