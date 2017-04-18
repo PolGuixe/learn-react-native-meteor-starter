@@ -1,9 +1,11 @@
+import _ from 'lodash';
 import React, { Component, PropTypes } from 'react';
 import MapView from 'react-native-maps';
 import { StyleSheet } from 'react-native';
 import Container from '../components/Container';
 import Router from '../config/router';
 import FloatingButton from '../components/FloatingButton';
+import MapCallout, { styles as mapCalloutStyles } from '../components/MapCallout';
 
 class NearMeMap extends Component {
   static route = {
@@ -44,11 +46,10 @@ class NearMeMap extends Component {
 
   render() {
     const { locations, position } = this.props.route.params;
-    console.log(position);
 
     return (
       <Container>
-        <MapViewiniti
+        <MapView
           style={{ ...StyleSheet.absoluteFillObject }}
           initialRegion={{
             latitude: position.coords.latitude,
@@ -57,7 +58,27 @@ class NearMeMap extends Component {
             longitudeDelta: 0.0421,
           }}
           showsUserLocation
-        />
+        >
+          {_.map(locations, location => {
+            const [longitude, latitude] = location.location.coordinates;
+            return (
+              <MapView.Marker key={location._id} coordinate={{ latitude, longitude }}>
+                <MapView.Callout
+                  style={mapCalloutStyles.calloutContainer}
+                  tooltip
+                  onPress={() => this.goToLocationDetails(location)}
+                >
+                  <MapCallout
+                    title={location.station_name}
+                    description={this.subTitle(location)}
+                    onPress={() => this.goToLocationDetails(location)}
+                  />
+                </MapView.Callout>
+
+              </MapView.Marker>
+            );
+          })}
+        </MapView>
         <FloatingButton onPress={this.goToNearMe} icon="list" />
       </Container>
     );
