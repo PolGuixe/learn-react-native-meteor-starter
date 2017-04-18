@@ -16,6 +16,7 @@ class SignIn extends Component {
 
   static propTypes = {
     navigator: PropTypes.object,
+    fromSignUp: PropTypes.bool,
   };
 
   constructor(props) {
@@ -29,7 +30,11 @@ class SignIn extends Component {
   }
 
   goToSignUp = () => {
-    this.props.navigator.push();
+    if (this.props.fromSignUp) {
+      this.props.navigator.pop();
+    } else {
+      this.props.navigator.push(Router.getRoute('signUp'));
+    }
   };
 
   signIn = () => {

@@ -36,7 +36,7 @@ class SignUp extends Component {
   }
 
   goToSignIn = () => {
-    this.props.navigator.push(Router.getRoute('signIn'));
+    this.props.navigator.push(Router.getRoute('signIn', { fromSignUp: true }));
   };
 
   handleChangeEmail = email => {
