@@ -53,7 +53,7 @@ export const changeCheckinStatus = new ValidatedMethod({
               'You are alredy checked in',
             );
           }
-          if (location.checkedInUserId !== null) {
+          if (typeof location.checkedInUserId === 'string') {
             throw new Meteor.Error(
               'Locations.changeCheckin.otherUserAlreadyIn',
               'Another user is alredy checked in',
